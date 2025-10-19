@@ -1,109 +1,135 @@
 ---
 title: "Data wrangling"
-author: "My name"
+author: "Claudia Gutierrez"
 date: "2025-10-13"
 output: html_document
 editor: source
 ---
 
-
-
-
 ## Part one - Wrangling
 
-This tutorial will allow you to explore `dplyr` functionality based on the previous lecture. Every question can be answered with a combination of `|>` pipes. You should refrain from using temporary variables and statements outside of the range of the tidyverse.  
+This tutorial will allow you to explore `dplyr` functionality based on the previous lecture. Every question can be answered with a combination of `|>` pipes. You should refrain from using temporary variables and statements outside of the range of the tidyverse.
 
 The first part does not require joins or pivots.
 
-### Import the [data from the website](https://biostat2.uni.lu/practicals/data/judgments.tsv). 
+### Import the [data from the website](https://biostat2.uni.lu/practicals/data/judgments.tsv).
+
 Assign to the name `judgments` and correct the column types where needed.
 
 ```{r}
-# Write your answer here
+library(readr)
+judge_url <- "https://biostat2.uni.lu/practicals/data/judgments.tsv"
+judgments <- readr::read_tsv(judge_url)
+spec(judgments)
 ```
-
 
 ### Use `glimpse()` to identify columns and column types.
 
 What are the dimensions of the data set.
 
+```{r}
+glimpse(judgments)
+```
 
-### Exercise 1 
+### Exercise 1
 
 You can combine the following tasks into a single statement.
 
 #### Select columns
+
 Select `gender`, `subject`, `age` and referring to the `STAI` questionnaire.
 
 ```{r}
-# Write your answer here
+library(tidyverse)
+judgments_select <- judgments |> 
+  select(gender, subject, age, STAI_pre, STAI_post)
+judgments
 ```
-
 
 #### Select all subjects with `STAI_pre` greater than 65 and `STAI_post` greater than 40
 
 ```{r}
-# Write your answer here
+judgments_select |> 
+filter(STAI_pre > 65 & STAI_post > 40)
+judgments_select
 ```
-
 
 #### Sort the observations by `STAI_pre` so that the subject with the highest score is on top.
 
 ```{r}
-# Write your answer here
+judgments_select |> 
+  arrange(desc(STAI_pre))
+judgments_select
 ```
 
 #### For better readability, move the subject, STAI_pre and STAI_post columns to the first positions.
 
 ```{r}
-# Write your answer here
+judgments_select |> 
+  relocate(STAI_pre, STAI_post)
+judgments_select
 ```
 
 #### Check if the data set contains duplicated rows
 
-::: {.callout-tip}
+# check mutate and if .. statement
+
+::: callout-tip
 ### Tip
-Compare the number of rows in the raw input table with the number of rows 
-in a de-duplicated table containing unique rows only. 
+
+Compare the number of rows in the raw input table with the number of rows in a de-duplicated table containing unique rows only.
 :::
 
 ```{r}
-# Your answer in code here
+duplicated(judgments)
+nrow(unique(judgments))
 ```
-
-
 
 ### Exercise 2
 
-#### Create a new column called `STAI_pre_category` 
+#### Create a new column called `STAI_pre_category`
 
 It should contain "low", "normal" and "high" entries depending on the `STAI_pre` values:
 
-  * if `STAI_pre` is less than `25` assign "low",
-  
-  * if `STAI_pre` is over `65` assign "high",
-  
-  * for all other values assign "normal".
+-   if `STAI_pre` is less than `25` assign "low",
+
+-   if `STAI_pre` is over `65` assign "high",
+
+-   for all other values assign "normal".
+
+```{r}
+judgments_select <- judgments_select |> 
+  mutate(STAI_pre_category = case_when(
+    STAI_pre < 25   ~ "low", 
+    STAI_pre > 60   ~ "high", 
+    .default = "normal"))
+judgments_select
+```
 
 #### Arrange the table by `STAI_pre` in a descending manner.
 
 ```{r}
-# Write your answer here
+judgments_select |> 
+  arrange(desc(STAI_pre))
+judgments_select
 ```
-
 
 ### Display distinct values in `STAI_pre` and `STAI_pre_category`.
 
 ```{r}
-# Write your answer here
+judgments_select |>
+  distinct(STAI_pre, STAI_pre_category)
+judgments_select
 ```
 
-
 ##### Normalize the values in the REI group
+
 Divide all entries in the REI questionnaire by 5, the maximal value.
 
 ```{r}
-# Write your answer here
+judgments |> 
+  mutate(across(matches("REI_\\d"), 
+                \(x) x / 5)) |>
+  relocate(starts_with("REI")) 
+judgments
 ```
-
-
